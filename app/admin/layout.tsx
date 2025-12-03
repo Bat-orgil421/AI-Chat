@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AdminLayout({
   children,
@@ -19,9 +20,12 @@ export default function AdminLayout({
                 <Button variant="ghost">Characters</Button>
               </Link>
             </div>
-            <Link href="/">
-              <Button variant="outline">Back to App</Button>
-            </Link>
+            <div className="flex items-center space-x-2">
+              <ThemeToggle />
+              <Link href="/">
+                <Button variant="outline">Back to App</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>

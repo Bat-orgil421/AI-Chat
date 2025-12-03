@@ -5,13 +5,13 @@ import path from "path";
 
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ characterId: string }> }
 ) => {
   try {
-    const { id } = await params;
+    const { characterId: id } = await params;
 
     // Get the character to find the image path
-    const character = await prisma.charecter.findUnique({
+    const character = await prisma.character.findUnique({
       where: { id },
     });
 
@@ -33,8 +33,17 @@ export const DELETE = async (
       }
     }
 
+    // Delete all messages associated with this character first
+    await prisma.message.deleteMany({
+      where: {
+        character: {
+          id,
+        },
+      },
+    });
+
     // Delete the character from database
-    await prisma.charecter.delete({
+    await prisma.character.delete({
       where: { id },
     });
 
@@ -50,17 +59,19 @@ export const DELETE = async (
 
 export const PUT = async (
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ characterId: string }> }
 ) => {
   try {
-    const { id } = await params;
+    const { characterId: id } = await params;
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
-    const desciption = formData.get("desciption") as string;
+    const description = formData.get("description") as string;
+    const basePrompt = formData.get("basePrompt") as string;
+    const greetingText = formData.get("greetingText") as string;
     const imageFile = formData.get("image") as File | null;
 
-    if (!name || !desciption) {
+    if (!name || !description || !basePrompt || !greetingText) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -68,7 +79,7 @@ export const PUT = async (
     }
 
     // Get current character
-    const currentCharacter = await prisma.charecter.findUnique({
+    const currentCharacter = await prisma.character.findUnique({
       where: { id },
     });
 
@@ -117,11 +128,13 @@ export const PUT = async (
     }
 
     // Update character
-    const updatedCharacter = await prisma.charecter.update({
+    const updatedCharacter = await prisma.character.update({
       where: { id },
       data: {
         name,
-        desciption,
+        description,
+        basePrompt,
+        greetingText,
         image: imagePath,
       },
     });

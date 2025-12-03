@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
   try {
-    const characters = await prisma.charecter.findMany();
+    const characters = await prisma.character.findMany();
     return NextResponse.json(characters);
   } catch (error) {
     return NextResponse.json(
@@ -17,10 +17,12 @@ export const POST = async (req: NextRequest) => {
   try {
     const formData = await req.formData();
     const name = formData.get("name") as string;
-    const desciption = formData.get("desciption") as string;
+    const description = formData.get("description") as string;
+    const basePrompt = formData.get("basePrompt") as string;
+    const greetingText = formData.get("greetingText") as string;
     const imageFile = formData.get("image") as File;
 
-    if (!name || !desciption || !imageFile) {
+    if (!name || !description || !basePrompt || !greetingText || !imageFile) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -47,10 +49,12 @@ export const POST = async (req: NextRequest) => {
     // Store relative path in database
     const imagePath = `/uploads/${fileName}`;
 
-    const character = await prisma.charecter.create({
+    const character = await prisma.character.create({
       data: {
         name,
-        desciption,
+        description,
+        basePrompt,
+        greetingText,
         image: imagePath,
       },
     });

@@ -11,20 +11,23 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-model Charecter {
-  id String @id @default(nanoid())
-  name String
-  desciption String
-  image String
-  messages Message[]
+model Character {
+  id           String    @id @default(nanoid())
+  name         String
+  description  String
+  image        String
+  basePrompt   String
+  greetingText String
+  messages     Message[]
 }
 
 model Message {
-  id String @id @default(nanoid())
-  contact String
-  character Charecter @relation(fields: [characterid], references: [id])
-  characterid String
+  id          String    @id @default(nanoid())
+  content     String
+  role        String // 'model' , 'user'
+  character   Character @relation(fields: [characterId], references: [id])
+  characterId String
+  createdAt   DateTime  @default(now())
 }

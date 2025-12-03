@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -32,12 +33,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, MessageCircle } from "lucide-react";
 
 interface Character {
   id: string;
   name: string;
-  desciption: string;
+  description: string;
+  basePrompt: string;
+  greetingText: string;
   image: string;
 }
 
@@ -51,7 +54,9 @@ export default function AdminCharactersPage() {
   );
   const [formData, setFormData] = useState({
     name: "",
-    desciption: "",
+    description: "",
+    basePrompt: "",
+    greetingText: "",
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -80,7 +85,9 @@ export default function AdminCharactersPage() {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
-      formDataToSend.append("desciption", formData.desciption);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("basePrompt", formData.basePrompt);
+      formDataToSend.append("greetingText", formData.greetingText);
       formDataToSend.append("image", selectedFile);
 
       const response = await fetch("/api/character", {
@@ -91,7 +98,12 @@ export default function AdminCharactersPage() {
       if (response.ok) {
         const newCharacter = await response.json();
         setCharacters([...characters, newCharacter]);
-        setFormData({ name: "", desciption: "" });
+        setFormData({
+          name: "",
+          description: "",
+          basePrompt: "",
+          greetingText: "",
+        });
         setSelectedFile(null);
         setIsCreateDialogOpen(false);
       }
@@ -109,7 +121,9 @@ export default function AdminCharactersPage() {
     setEditingCharacter(character);
     setFormData({
       name: character.name,
-      desciption: character.desciption,
+      description: character.description,
+      basePrompt: character.basePrompt,
+      greetingText: character.greetingText,
     });
     setSelectedFile(null);
     setIsEditDialogOpen(true);
@@ -122,7 +136,9 @@ export default function AdminCharactersPage() {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
-      formDataToSend.append("desciption", formData.desciption);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("basePrompt", formData.basePrompt);
+      formDataToSend.append("greetingText", formData.greetingText);
       if (selectedFile) {
         formDataToSend.append("image", selectedFile);
       }
@@ -139,7 +155,12 @@ export default function AdminCharactersPage() {
             char.id === editingCharacter.id ? updatedCharacter : char
           )
         );
-        setFormData({ name: "", desciption: "" });
+        setFormData({
+          name: "",
+          description: "",
+          basePrompt: "",
+          greetingText: "",
+        });
         setSelectedFile(null);
         setEditingCharacter(null);
         setIsEditDialogOpen(false);
@@ -198,13 +219,39 @@ export default function AdminCharactersPage() {
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="desciption" className="text-right">
+                  <Label htmlFor="description" className="text-right">
                     Description
                   </Label>
                   <Input
-                    id="desciption"
-                    name="desciption"
-                    value={formData.desciption}
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="basePrompt" className="text-right">
+                    Base Prompt
+                  </Label>
+                  <Input
+                    id="basePrompt"
+                    name="basePrompt"
+                    value={formData.basePrompt}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="greetingText" className="text-right">
+                    Greeting Text
+                  </Label>
+                  <Input
+                    id="greetingText"
+                    name="greetingText"
+                    value={formData.greetingText}
                     onChange={handleInputChange}
                     className="col-span-3"
                     required
@@ -233,70 +280,92 @@ export default function AdminCharactersPage() {
             </form>
           </DialogContent>
         </Dialog>
+      </div>
 
-        {/* Edit Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Edit Character</DialogTitle>
-              <DialogDescription>
-                Update character information.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleUpdateCharacter}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-image" className="text-right">
-                    Image
-                  </Label>
-                  <Input
-                    id="edit-image"
-                    name="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setSelectedFile(e.target.files?.[0] || null)
-                    }
-                    className="col-span-3"
-                  />
-                  <div className="col-span-4 text-sm text-muted-foreground">
-                    Leave empty to keep current image
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="edit-name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-desciption" className="text-right">
-                    Description
-                  </Label>
-                  <Input
-                    id="edit-desciption"
-                    name="desciption"
-                    value={formData.desciption}
-                    onChange={handleInputChange}
-                    className="col-span-3"
-                    required
-                  />
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Character</DialogTitle>
+            <DialogDescription>Update character information.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateCharacter}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-image" className="text-right">
+                  Image
+                </Label>
+                <Input
+                  id="edit-image"
+                  name="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="col-span-3"
+                />
+                <div className="col-span-4 text-sm text-muted-foreground">
+                  Leave empty to keep current image
                 </div>
               </div>
-              <DialogFooter>
-                <Button type="submit">Update Character</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-name" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-description" className="text-right">
+                  Description
+                </Label>
+                <Input
+                  id="edit-description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-basePrompt" className="text-right">
+                  Base Prompt
+                </Label>
+                <Input
+                  id="edit-basePrompt"
+                  name="basePrompt"
+                  value={formData.basePrompt}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-greetingText" className="text-right">
+                  Greeting Text
+                </Label>
+                <Input
+                  id="edit-greetingText"
+                  name="greetingText"
+                  value={formData.greetingText}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">Update Character</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Table>
         <TableHeader>
@@ -304,7 +373,6 @@ export default function AdminCharactersPage() {
             <TableHead>Image</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
-
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -319,7 +387,7 @@ export default function AdminCharactersPage() {
                 />
               </TableCell>
               <TableCell>{character.name}</TableCell>
-              <TableCell>{character.desciption}</TableCell>
+              <TableCell>{character.description}</TableCell>
 
               <TableCell>
                 <div className="flex gap-2">
@@ -330,6 +398,11 @@ export default function AdminCharactersPage() {
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
+                  <Link href={`/character/${character.id}`}>
+                    <Button variant="outline" size="sm">
+                      <MessageCircle className="h-4 w-4" />
+                    </Button>
+                  </Link>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="outline" size="sm">
