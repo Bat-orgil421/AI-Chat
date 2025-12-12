@@ -2,6 +2,7 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { Chat, GoogleGenAI } from "@google/genai";
+import { getUserFromRequest } from "@/lib/auth";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -10,6 +11,14 @@ export const GET = async (
   req: NextRequest,
   { params }: { params: Promise<{ characterId: string }> }
 ) => {
+  const user = getUserFromRequest(req);
+  if (!user) {
+    return NextResponse.json(
+      { message: "Authentication required" },
+      { status: 401 }
+    );
+  }
+  
   const { characterId } = await params;
 
   const chats = await prisma.message.findMany({
@@ -30,6 +39,14 @@ export const POST = async (
   req: NextRequest,
   { params }: { params: Promise<{ characterId: string }> }
 ) => {
+  const user = getUserFromRequest(req);
+  if (!user) {
+    return NextResponse.json(
+      { message: "Authentication required" },
+      { status: 401 }
+    );
+  }
+
   const { characterId } = await params;
   const { content }: Prisma.MessageCreateInput = await req.json();
 

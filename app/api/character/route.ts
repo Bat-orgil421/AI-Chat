@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
   try {
-    const characters = await prisma.character.findMany();
+    const characters = await prisma.character.findMany({
+      orderBy: { order: "asc" },
+    });
     return NextResponse.json(characters);
   } catch (error) {
     return NextResponse.json(

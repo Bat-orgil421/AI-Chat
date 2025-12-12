@@ -2,14 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useRouter } from "next/navigation";
+
 import {
   Dialog,
   DialogContent,
@@ -23,17 +17,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Pencil, Trash2, MessageCircle } from "lucide-react";
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { MessageCircle } from "lucide-react";
 
 interface Character {
   id: string;
@@ -45,11 +36,16 @@ interface Character {
 }
 
 export default function AdminCharactersPage() {
+  const router = useRouter();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(
+    null
+  );
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [viewingCharacter, setViewingCharacter] = useState<Character | null>(
     null
   );
   const [formData, setFormData] = useState({
@@ -129,6 +125,11 @@ export default function AdminCharactersPage() {
     setIsEditDialogOpen(true);
   };
 
+  const handleViewCharacter = (character: Character) => {
+    setViewingCharacter(character);
+    setIsViewDialogOpen(true);
+  };
+
   const handleUpdateCharacter = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCharacter) return;
@@ -169,20 +170,7 @@ export default function AdminCharactersPage() {
       console.error("Failed to update character:", error);
     }
   };
-
-  const handleDeleteCharacter = async (id: string) => {
-    try {
-      const response = await fetch(`/api/character/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        setCharacters(characters.filter((char) => char.id !== id));
-      }
-    } catch (error) {
-      console.error("Failed to delete character:", error);
-    }
-  };
+  
 
   if (isLoading) {
     return <div className="p-6">Loading...</div>;
@@ -367,73 +355,92 @@ export default function AdminCharactersPage() {
         </DialogContent>
       </Dialog>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Image</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {characters.map((character) => (
-            <TableRow key={character.id}>
-              <TableCell>
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>View Character</DialogTitle>
+            <DialogDescription>Character details.</DialogDescription>
+          </DialogHeader>
+          {viewingCharacter && (
+            <div className="grid gap-4 py-4">
+              <div className="flex justify-center">
                 <img
-                  src={character.image}
-                  alt={character.name}
-                  className="w-12 h-12 object-cover rounded"
+                  src={viewingCharacter.image}
+                  alt={viewingCharacter.name}
+                  className="w-24 h-24 object-cover rounded-full"
                 />
-              </TableCell>
-              <TableCell>{character.name}</TableCell>
-              <TableCell>{character.description}</TableCell>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right font-medium">Name</Label>
+                <span className="col-span-3">{viewingCharacter.name}</span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right font-medium">Description</Label>
+                <span className="col-span-3">
+                  {viewingCharacter.description}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right font-medium">Base Prompt</Label>
+                <span className="col-span-3">
+                  {viewingCharacter.basePrompt}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right font-medium">Greeting Text</Label>
+                <span className="col-span-3">
+                  {viewingCharacter.greetingText}
+                </span>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-              <TableCell>
-                <div className="flex gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {characters.map((character) => (
+          <Link href={`/profile/${character.id}`}>
+            <Card
+              key={character.id}
+              className="transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/20 cursor-pointer border-2 hover:border-primary/50"
+            >
+              <CardHeader>
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={character.image}
+                    alt={character.name}
+                    className="w-16 h-16 object-cover rounded-full"
+                  />
+                  <div>
+                    <CardTitle>{character.name}</CardTitle>
+                  </div>
+                </div>
+                <CardAction>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleEditCharacter(character)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/character/${character.id}`);
+                    }}
+                    className="transition-all hover:scale-110 hover:bg-primary text-gray-500 hover:text-white"
                   >
-                    <Pencil className="h-4 w-4" />
+                    <MessageCircle className="h-4 w-4 mr-2 transition-all text-gray-500 hover:text-white hover:rotate-12" />
+                    Chat
                   </Button>
-                  <Link href={`/character/${character.id}`}>
-                    <Button variant="outline" size="sm">
-                      <MessageCircle className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Character</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{character.name}"?
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteCharacter(character.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <CardDescription>{character.description}</CardDescription>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

@@ -23,6 +23,7 @@ interface Character {
 
 export default function CharacterChatPage() {
   const params = useParams();
+  const router = useRouter();
   const characterId = params.characterId as string;
 
   const [character, setCharacter] = useState<Character | null>(null);
@@ -30,6 +31,20 @@ export default function CharacterChatPage() {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/signin");
+      return;
+    }
+  }, [router]);
 
   useEffect(() => {
     fetchCharacter();
@@ -59,7 +74,9 @@ export default function CharacterChatPage() {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`/api/character/${characterId}/message`);
+      const response = await fetch(`/api/character/${characterId}/message`, {
+        headers: getAuthHeaders(),
+      });
       if (response.ok) {
         const msgs = await response.json();
         setMessages(msgs);
@@ -82,6 +99,7 @@ export default function CharacterChatPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({ content: messageToSend }),
       });

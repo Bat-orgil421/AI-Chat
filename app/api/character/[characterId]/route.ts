@@ -3,6 +3,34 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 
+export const GET = async (
+  req: NextRequest,
+  { params }: { params: Promise<{ characterId: string }> }
+) => {
+  try {
+    const { characterId: id } = await params;
+
+    const character = await prisma.character.findUnique({
+      where: { id },
+    });
+
+    if (!character) {
+      return NextResponse.json(
+        { error: "Character not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(character);
+  } catch (error) {
+    console.error("Failed to fetch character:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch character" },
+      { status: 500 }
+    );
+  }
+};
+
 export const DELETE = async (
   req: NextRequest,
   { params }: { params: Promise<{ characterId: string }> }

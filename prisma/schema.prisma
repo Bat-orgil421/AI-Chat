@@ -20,6 +20,7 @@ model Character {
   image        String
   basePrompt   String
   greetingText String
+  order        Int       @default(0)
   messages     Message[]
 }
 
@@ -30,4 +31,12 @@ model Message {
   character   Character @relation(fields: [characterId], references: [id])
   characterId String
   createdAt   DateTime  @default(now())
+}
+
+model NewUser {
+  id String @id @default(nanoid())
+  username String 
+  fullname String
+  email String
+  password String
 }
