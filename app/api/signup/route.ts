@@ -13,7 +13,8 @@ const signupSchema = z.object({
 export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const { username, fullname, email, password } = body;
+    const { username, fullname, email, password: rawPassword } = body;
+    const password = rawPassword?.trim();
 
     if (!username || !fullname || !email || !password) {
       return NextResponse.json(
@@ -23,9 +24,9 @@ export const POST = async (req: NextRequest) => {
     }
 
     const validation = signupSchema.safeParse({
-      username,
-      fullname,
-      email,
+      username: username?.trim(),
+      fullname: fullname?.trim(),
+      email: email?.trim(),
       password,
     });
 
@@ -39,7 +40,7 @@ export const POST = async (req: NextRequest) => {
     // Check if user already exists
     const existingUser = await prisma.newUser.findFirst({
       where: {
-        OR: [{ email }, { username }],
+        OR: [{ email: email?.trim() }, { username: username?.trim() }],
       },
     });
 
@@ -56,9 +57,9 @@ export const POST = async (req: NextRequest) => {
     // Create user
     const newUser = await prisma.newUser.create({
       data: {
-        username,
-        fullname,
-        email,
+        username: username?.trim(),
+        fullname: fullname?.trim(),
+        email: email?.trim(),
         password: hashedPassword,
       },
     });

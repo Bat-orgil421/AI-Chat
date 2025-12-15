@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 const signinSchema = z.object({
   identifier: z.string().min(1, "Email or username is required"),
@@ -19,6 +20,7 @@ type SigninForm = z.infer<typeof signinSchema>;
 export default function SigninPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -69,7 +71,7 @@ export default function SigninPage() {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
+          <div className="space-y-4 text-black">
             <div>
               <Label htmlFor="identifier">Email or Username</Label>
               <Input
@@ -84,14 +86,29 @@ export default function SigninPage() {
                 </p>
               )}
             </div>
-            <div>
+            <div className="text-black">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                {...register("password")}
-                className="mt-1"
-              />
+              <div className="relative mt-1">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  {...register("password")}
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.password.message}

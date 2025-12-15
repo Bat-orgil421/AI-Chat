@@ -32,11 +32,3 @@ model Message {
   characterId String
   createdAt   DateTime  @default(now())
 }
-
-model NewUser {
-  id String @id @default(nanoid())
-  username String 
-  fullname String
-  email String
-  password String
-}

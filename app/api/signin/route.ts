@@ -5,23 +5,28 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 
 const signinSchema = z.object({
-  credential: z.string().min(1, "credential is required"),
+  identifier: z.string().min(1, "identifier is required"),
   password: z.string().min(1, "Password is required"),
 });
 
 export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const { credential, password } = body;
+    const { identifier, password } = body;
+    const credential = identifier?.trim();
+    const trimmedPassword = password?.trim();
 
-    if (!credential || !password) {
+    if (!credential || !trimmedPassword) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const validation = signinSchema.safeParse({ credential, password });
+    const validation = signinSchema.safeParse({
+      identifier: credential,
+      password: trimmedPassword,
+    });
 
     if (!validation.success) {
       return NextResponse.json(
@@ -45,7 +50,10 @@ export const POST = async (req: NextRequest) => {
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      trimmedPassword,
+      user.password
+    );
 
     if (!isPasswordValid) {
       return NextResponse.json(
